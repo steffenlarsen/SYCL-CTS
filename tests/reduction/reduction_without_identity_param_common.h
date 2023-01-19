@@ -9,9 +9,10 @@
 #ifndef __SYCL_CTS_TEST_REDUCTION_WITHOUT_IDENTITY_PARAM_COMMON_H
 #define __SYCL_CTS_TEST_REDUCTION_WITHOUT_IDENTITY_PARAM_COMMON_H
 
-#include "../common/common.h"
 #include "../../util/type_traits.h"
 #include "../../util/usm_helper.h"
+#include "../common/common.h"
+#include "../common/value_operations.h"
 #include "reduction_common.h"
 #include "reduction_get_lambda.h"
 #include <cstddef>
@@ -19,7 +20,8 @@
 namespace reduction_without_identity {
 
 static constexpr size_t number_elements{2};
-template <typename VariableT, int TestCase>
+template <typename VariableT, bool UseCombineFlagT, bool UsePropertyFlag,
+          typename FunctorT, typename RangeT, int TestCase>
 class kernel;
 
 constexpr int init_value_without_property_case{99};
@@ -149,9 +151,11 @@ void run_test_for_value_ptr(FunctorT &functor, RangeT &range,
                                                  UseCombineFlagT, FunctorT>(
         initial_buf.template get_access<sycl::access_mode::read>(cgh))};
 
-    cgh.parallel_for<kernel<VariableT, 1>>(range, reduction, lambda);
-  });
-  if (*variable_for_reduction.get() != expected_value) {
+    cgh.parallel_for<kernel<VariableT, UseCombineFlagT, UsePropertyFlag,
+                            FunctorT, RangeT, 1>>(range, reduction, lambda);
+  }).wait();
+  if (!value_operations::are_approx_equal(*variable_for_reduction.get(),
+                                          expected_value)) {
     log.fail(get_fail_message(type_name, *variable_for_reduction.get(),
                               expected_value),
              __LINE__);
@@ -182,8 +186,8 @@ void run_test_for_buffer(FunctorT functor, RangeT range, sycl::queue &queue,
       reduction_common::get_buffer<VariableT>()};
   VariableT expected_value{reduction_common::get_expected_value(
       functor, initial_buf,
-      reduction_common::get_init_value_for_expected_value<VariableT,
-                                                          FunctorT>())};
+      reduction_common::get_init_value_for_expected_value<VariableT, FunctorT,
+                                                          UsePropertyFlag>())};
   VariableT output_result{
       reduction_common::get_init_value_for_reduction<VariableT, FunctorT,
                                                      UsePropertyFlag>()};
@@ -195,9 +199,11 @@ void run_test_for_buffer(FunctorT functor, RangeT range, sycl::queue &queue,
     auto lambda{reduction_get_lambda::get_lambda<VariableT, RangeT,
                                                  UseCombineFlagT, FunctorT>(
         initial_buf.template get_access<sycl::access_mode::read>(cgh))};
-    cgh.parallel_for<kernel<VariableT, 2>>(range, reduction, lambda);
-  });
-  if (output_buffer.get_host_access()[0] != expected_value) {
+    cgh.parallel_for<kernel<VariableT, UseCombineFlagT, UsePropertyFlag,
+                            FunctorT, RangeT, 2>>(range, reduction, lambda);
+  }).wait();
+  if (!value_operations::are_approx_equal(output_buffer.get_host_access()[0],
+                                          expected_value)) {
     log.fail(get_fail_message(type_name, output_buffer.get_host_access()[0],
                               expected_value),
              __LINE__);
@@ -231,8 +237,8 @@ void run_test_for_span(FunctorT functor, RangeT range, sycl::queue &queue,
       reduction_common::get_buffer<VariableT>()};
   VariableT expected_value{reduction_common::get_expected_value(
       functor, initial_buf,
-      reduction_common::get_init_value_for_expected_value<VariableT,
-                                                          FunctorT>())};
+      reduction_common::get_init_value_for_expected_value<VariableT, FunctorT,
+                                                          UsePropertyFlag>())};
   auto allocated_memory{
       usm_helper::allocate_usm_memory<sycl::usm::alloc::shared, VariableT>(
           queue, number_elements)};
@@ -252,10 +258,12 @@ void run_test_for_span(FunctorT functor, RangeT range, sycl::queue &queue,
                                                   UseCombineFlagT, FunctorT>(
             initial_buf.template get_access<sycl::access_mode::read>(cgh),
             number_elements)};
-    cgh.parallel_for<kernel<VariableT, 3>>(range, reduction, lambda);
-  });
+    cgh.parallel_for<kernel<VariableT, UseCombineFlagT, UsePropertyFlag,
+                            FunctorT, RangeT, 3>>(range, reduction, lambda);
+  }).wait();
   for (size_t i = 0; i < number_elements; i++) {
-    if (allocated_memory.get()[i] != expected_value) {
+    if (!value_operations::are_approx_equal(allocated_memory.get()[i],
+                                            expected_value)) {
       log.fail(get_fail_message(type_name, allocated_memory.get()[i],
                                 expected_value),
                __LINE__);
@@ -322,6 +330,9 @@ struct run_tests_for_all_functors {
     // for functors that can be called by .combine() or overloaded operator()
     // for functors that can be called by .combine() or overloaded operator()
     // test will be called twice using operator +, *, ^= e.t.c.  and .combine()
+    run_test_for_all_reductions_types<VariableT, use_lambda_with_combine,
+                                      use_property_flag>(
+        sycl::plus<VariableT>(), range, queue, log, type_name);
     run_test_for_all_reductions_types<VariableT, use_lambda_without_combine,
                                       use_property_flag>(
         sycl::plus<VariableT>(), range, queue, log, type_name);

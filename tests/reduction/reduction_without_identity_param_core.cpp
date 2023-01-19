@@ -29,11 +29,11 @@ template <typename UsePropertyFlagT, typename RangeT>
 void run_test_for_bool_variable(RangeT& range, sycl::queue& queue,
                                 sycl_cts::util::logger& log) {
   run_test_for_all_reductions_types<bool, reduction_get_lambda::with_combine,
-                                    UsePropertyFlagT>(
+                                    UsePropertyFlagT::value>(
       sycl::logical_and<bool>(), range, queue, log, "bool");
 
   run_test_for_all_reductions_types<bool, reduction_get_lambda::with_combine,
-                                    UsePropertyFlagT>(
+                                    UsePropertyFlagT::value>(
       sycl::logical_or<bool>(), range, queue, log, "bool");
 }
 

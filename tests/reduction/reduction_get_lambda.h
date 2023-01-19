@@ -27,7 +27,7 @@ namespace reduction_get_lambda {
  */
 template <typename VariableT, typename FunctorT, typename FirstValueT,
           typename SecondValueT>
-auto apply_chosen_functor(FirstValueT &first_val, SecondValueT &second_val) {
+auto apply_chosen_functor(FirstValueT &&first_val, SecondValueT &second_val) {
   if constexpr (std::is_same_v<FunctorT, sycl::multiplies<VariableT>>) {
     return first_val *= second_val;
   } else if constexpr (std::is_same_v<FunctorT, sycl::plus<VariableT>>) {
@@ -145,8 +145,7 @@ auto get_lambda_with_range_for_span(AccessorT accessor,
   } else {
     return [=](sycl::id<1> idx, auto &reducer) {
       for (size_t i = 0; i < number_elements; i++) {
-        reducer[i] = apply_chosen_functor<VariableT, FunctorT>(reducer[i],
-                                                               accessor[idx]);
+        apply_chosen_functor<VariableT, FunctorT>(reducer[i], accessor[idx]);
       }
     };
   }
@@ -177,7 +176,7 @@ auto get_lambda_with_nd_range_for_span(AccessorT accessor,
   } else {
     return [=](sycl::nd_item<1> nd_item, auto &reducer) {
       for (size_t i = 0; i < number_elements; i++) {
-        reducer[i] = apply_chosen_functor<VariableT, FunctorT>(
+        apply_chosen_functor<VariableT, FunctorT>(
             reducer[i], accessor[nd_item.get_global_id()]);
       }
     };

@@ -297,6 +297,27 @@ bool are_equal(
 }
 
 #endif
+
+template <typename T>
+inline bool are_approx_equal(const T& left, const T& right) {
+  return are_equal(left, right);
+}
+
+inline bool are_approx_equal(sycl::half left, sycl::half right) {
+  static constexpr sycl::half eps = 1e-4f;
+  return ((left < right + eps) && (left + eps > right));
+}
+
+inline bool are_approx_equal(float left, float right) {
+  static constexpr float eps = 1e-4f;
+  return ((left < right + eps) && (left + eps > right));
+}
+
+inline bool are_approx_equal(double left, double right) {
+  static constexpr double eps = 1e-4;
+  return ((left < right + eps) && (left + eps > right));
+}
+
 //////////////////////////// Compare functions
 
 template <typename T>

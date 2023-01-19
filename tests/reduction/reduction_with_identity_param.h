@@ -18,7 +18,7 @@ namespace reduction_with_identity {
 using namespace reduction_common;
 
 static constexpr size_t number_elements = 5;
-static constexpr int identity = 5;
+static constexpr int identity = reduction_common::identity_value;
 static constexpr int initial = 6;
 template <typename T, int TestCase>
 class kernel;
