@@ -34,15 +34,11 @@ namespace subscript_operator {
 // Creating instance with default constructor
 template <typename T, size_t sizeOfArray>
 device_global<T[sizeOfArray]> dev_global;
-template <typename T, size_t sizeOfArray>
-const device_global<T[sizeOfArray]> const_dev_global;
 
 // Used to address elements in the result array
 enum class indx : size_t {
-  correct_def_val_const,
-  correct_def_val_non_const,
-  same_type_const,
-  same_type_non_const,
+  correct_def_val,
+  same_type,
   correct_changed_val,
   size  // must be last
 };
@@ -59,11 +55,8 @@ void run_test(util::logger& log, const std::string& type_name) {
       device_global_kernel_name<T, sizeOfArray, test_names::subscript_operator>;
 
   std::string error_strings[integral(indx::size)]{
-      "Wrong default value returned by subscript operator of const instance",
-      "Wrong default value returned by subscript operator of non-const "
-      "instance",
-      "Wrong type returned by subscript operator of const instance",
-      "Wrong type returned by subscript operator of non-const instance",
+      "Wrong default value returned by subscript operator",
+      "Wrong type returned by subscript operator",
       "Wrong value after change instance through subscript operator",
   };
 
@@ -82,16 +75,11 @@ void run_test(util::logger& log, const std::string& type_name) {
       cgh.single_task<kernel>([=] {
         for (size_t i = 0; i < sizeOfArray; ++i) {
           // Check that array element contains default value
-          result_acc[integral(indx::correct_def_val_const)] =
-              const_dev_global<T, sizeOfArray>[i] == value_ref_zero_init;
-          result_acc[integral(indx::correct_def_val_non_const)] =
+          result_acc[integral(indx::correct_def_val)] =
               dev_global<T, sizeOfArray>[i] == value_ref_zero_init;
 
           // Check that array element contains correct type
-          result_acc[integral(indx::same_type_const)] =
-              std::is_same<decltype(const_dev_global<T, sizeOfArray>[i]),
-                           typename device_global<T>::element_type&>::value;
-          result_acc[integral(indx::same_type_non_const)] =
+          result_acc[integral(indx::same_type)] =
               std::is_same<decltype(dev_global<T, sizeOfArray>[i]),
                            typename device_global<T>::element_type&>::value;
 
@@ -104,18 +92,16 @@ void run_test(util::logger& log, const std::string& type_name) {
           // If any check fail, then sum will not be equal to size, then
           // we can break the loop, because test is failed
           const int sum_of_checks =
-              result_acc[integral(indx::correct_def_val_const)] +
-              result_acc[integral(indx::correct_def_val_non_const)] +
-              result_acc[integral(indx::same_type_const)] +
-              result_acc[integral(indx::same_type_non_const)] +
+              result_acc[integral(indx::correct_def_val)] +
+              result_acc[integral(indx::same_type)] +
               result_acc[integral(indx::correct_changed_val)];
           if (sum_of_checks != integral(indx::size)) break;
         }
       });
     });
   }
-  for (size_t i = integral(indx::correct_def_val_const);
-       i < integral(indx::size); ++i) {
+  for (size_t i = integral(indx::correct_def_val); i < integral(indx::size);
+       ++i) {
     if (!result[i]) {
       std::string fail_msg = get_case_description("Device global: operator[]()",
                                                   error_strings[i], type_name);

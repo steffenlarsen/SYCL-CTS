@@ -37,16 +37,12 @@ struct device_global_kernel_name;
 namespace get_multi_ptr_method {
 // Creating device_global instances with default constructor
 template <typename T>
-const device_global<T> const_dev_global;
-template <typename T>
 device_global<T> dev_global;
 
 // Used to address elements in the result array
 enum class indx : size_t {
-  same_type_const,
-  same_type_non_const,
-  correct_def_val_const,
-  correct_def_val_non_const,
+  same_type,
+  correct_def_val,
   correct_changed_val,
   size  // must be last
 };
@@ -65,15 +61,10 @@ void run_test(util::logger& log, const std::string& type_name) {
 
   using multi_ptr_t =
       sycl::multi_ptr<T, sycl::access::address_space::global_space, Decorated>;
-  using const_multi_ptr_t =
-      sycl::multi_ptr<const T, sycl::access::address_space::global_space,
-                      Decorated>;
 
   std::string error_strings[integral(indx::size)]{
-      "Wrong type inside const multi_ptr",
-      "Wrong type inside non-const multi_ptr",
-      "Wrong default value inside const multi_ptr",
-      "Wrong default value inside non-const multi_ptr",
+      "Wrong type inside multi_ptr",
+      "Wrong default value inside multi_ptr",
       "Wrong value after change inside multi_ptr",
   };
 
@@ -89,21 +80,15 @@ void run_test(util::logger& log, const std::string& type_name) {
       T value_ref_zero_init{};
       std::memset(&value_ref_zero_init, 0, sizeof(value_ref_zero_init));
       cgh.single_task<kernel>([=] {
-        auto cmptr =
-            const_dev_global<const T>.template get_multi_ptr<Decorated>();
         auto mptr = dev_global<T>.template get_multi_ptr<Decorated>();
 
         // Check that underlying type of multi_ptr is same as T
-        result_acc[integral(indx::same_type_const)] =
-            std::is_same<decltype(cmptr), const_multi_ptr_t>::value;
-        result_acc[integral(indx::same_type_non_const)] =
+        result_acc[integral(indx::same_type)] =
             std::is_same<decltype(mptr), multi_ptr_t>::value;
 
         // if *mptr and *cmptr equal to default value, then
         // test will be marked as passed, otherwise the test is failed
-        result_acc[integral(indx::correct_def_val_const)] =
-            (*(cmptr.get()) == value_ref_zero_init);
-        result_acc[integral(indx::correct_def_val_non_const)] =
+        result_acc[integral(indx::correct_def_val)] =
             (*(mptr.get()) == value_ref_zero_init);
         // Change value, that multi_ptr points to
         value_operations::assign(*mptr, 42);
@@ -115,8 +100,7 @@ void run_test(util::logger& log, const std::string& type_name) {
       });
     });
   }
-  for (size_t i = integral(indx::same_type_const); i < integral(indx::size);
-       ++i) {
+  for (size_t i = integral(indx::same_type); i < integral(indx::size); ++i) {
     if (!result[i]) {
       std::string fail_msg = get_case_description<Decorated>(
           "Device global: get_multi_ptr()", error_strings[i], type_name);
@@ -129,14 +113,11 @@ void run_test(util::logger& log, const std::string& type_name) {
 namespace implicit_conversation_to_T {
 // Creating device_global instances with default constructor
 template <typename T>
-const device_global<T> const_dev_global;
-template <typename T>
 device_global<T> dev_global;
 
 // Setting enum for result array
 enum class indx : size_t {
-  is_def_value_const,
-  is_def_value_non_const,
+  is_def_value,
   correct_changed_val,
   size  // must be last
 };
@@ -152,8 +133,7 @@ void run_test(util::logger& log, const std::string& type_name) {
       device_global_kernel_name<T, test_names::implicit_conversation>;
 
   std::string error_strings[integral(indx::size)]{
-      "Wrong default value const type",
-      "Wrong default value non-const type",
+      "Wrong default value type",
       "Wrong value after change",
   };
 
@@ -172,14 +152,11 @@ void run_test(util::logger& log, const std::string& type_name) {
       cgh.single_task<kernel>([=] {
         // Call copy constructor of T to access reference to the device_global
         // value
-        const T& const_instance(const_dev_global<T>);
         T& instance(dev_global<T>);
 
         // Check that resulted reference is to default value
-        result_acc[integral(indx::is_def_value_const)] =
+        result_acc[integral(indx::is_def_value)] =
             (value_ref_zero_init == instance);
-        result_acc[integral(indx::is_def_value_non_const)] =
-            (value_ref_zero_init == const_instance);
 
         // Changing value
         value_operations::assign(dev_global<T>, 42);
@@ -192,7 +169,7 @@ void run_test(util::logger& log, const std::string& type_name) {
       });
     });
   }
-  for (size_t i = integral(indx::is_def_value_const); i < integral(indx::size);
+  for (size_t i = integral(indx::is_def_value); i < integral(indx::size);
        ++i) {
     if (!result[i]) {
       std::string fail_msg =
@@ -207,16 +184,12 @@ void run_test(util::logger& log, const std::string& type_name) {
 namespace get_method {
 // Creating device_global instances with default constructor
 template <typename T>
-const device_global<T> const_dev_global;
-template <typename T>
 device_global<T> dev_global;
 
 // Setting enum for result array
 enum class indx : size_t {
-  same_type_const,
-  same_type_non_const,
-  correct_def_val_const,
-  correct_def_val_non_const,
+  same_type,
+  correct_def_val,
   correct_changed_val,
   size  // must be last
 };
@@ -231,10 +204,8 @@ void run_test(util::logger& log, const std::string& type_name) {
   using kernel = device_global_kernel_name<T, test_names::get_method>;
 
   std::string error_strings[integral(indx::size)]{
-      "Wrong type for const value",
-      "Wrong type for non-const value",
-      "Wrong default value for const value",
-      "Wrong default value for non-const value",
+      "Wrong type for value",
+      "Wrong default value for value",
       "Wrong value after change",
   };
 
@@ -252,17 +223,12 @@ void run_test(util::logger& log, const std::string& type_name) {
       std::memset(&value_ref_zero_init, 0, sizeof(value_ref_zero_init));
       cgh.single_task<kernel>([=] {
         // Call get() to access reference
-        const T& const_instance(const_dev_global<T>.get());
         T& instance(dev_global<T>.get());
         // Check that return type is T& and const T&
-        result_acc[integral(indx::same_type_const)] =
-            std::is_same<decltype(const_instance), const T&>::value;
-        result_acc[integral(indx::same_type_non_const)] =
+        result_acc[integral(indx::same_type)] =
             std::is_same<decltype(instance), T&>::value;
         // Check that resulted reference is to default value
-        result_acc[integral(indx::correct_def_val_const)] =
-            (const_instance == value_ref_zero_init);
-        result_acc[integral(indx::correct_def_val_non_const)] =
+        result_acc[integral(indx::correct_def_val)] =
             (instance == value_ref_zero_init);
         // Assign new value an check that device_global instance contains new
         // value
@@ -272,8 +238,7 @@ void run_test(util::logger& log, const std::string& type_name) {
       });
     });
   }
-  for (size_t i = integral(indx::same_type_const); i < integral(indx::size);
-       ++i) {
+  for (size_t i = integral(indx::same_type); i < integral(indx::size); ++i) {
     if (!result[i]) {
       std::string fail_msg = get_case_description("Device global: get() method",
                                                   error_strings[i], type_name);

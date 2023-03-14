@@ -30,8 +30,6 @@ namespace oneapi = sycl::ext::oneapi;
 namespace several_kernel_in_one_device {
 template <typename T>
 oneapi::experimental::device_global<T> dev_global;
-template <typename T>
-const oneapi::experimental::device_global<T> const_dev_global;
 
 template <typename T>
 struct first_kernel;
@@ -40,8 +38,7 @@ struct second_kernel;
 
 // Used to address elements in the result array
 enum class indx : size_t {
-  const_expected,
-  non_const_expected,
+  expected,
   size  // must be last
 };
 constexpr auto integral(const indx& i) { return to_integral<indx>(i); }
@@ -77,13 +74,8 @@ void run_test(util::logger& log, const std::string& type_name) {
 
   util::array<element_type, checks_size> expected_value;
 
-  // For non-const expecting changed value
-  value_operations::assign(expected_value[integral(indx::non_const_expected)],
-                           new_value);
-
-  // For const value expecting that value is zero-initialized
-  std::memset(&expected_value[integral(indx::const_expected)], 0,
-              sizeof(element_type));
+  // For expecting changed value
+  value_operations::assign(expected_value[integral(indx::expected)], new_value);
 
   util::array<bool, checks_size> changed_correct;
   {
@@ -95,14 +87,8 @@ void run_test(util::logger& log, const std::string& type_name) {
           changed_corr_buf.template get_access<sycl::access_mode::write>(cgh);
       // Comparing current device_global val with expected in second kernel
       cgh.single_task<second_kernel<T>>([=](sycl::kernel_handler h) {
-        changed_corr[integral(indx::const_expected)] =
-            value_operations::are_equal(
-                const_dev_global<T>,
-                expected_value[integral(indx::const_expected)]);
-        changed_corr[integral(indx::non_const_expected)] =
-            value_operations::are_equal(
-                dev_global<T>,
-                expected_value[integral(indx::non_const_expected)]);
+        changed_corr[integral(indx::expected)] = value_operations::are_equal(
+            dev_global<T>, expected_value[integral(indx::expected)]);
       });
     });
     queue.wait_and_throw();

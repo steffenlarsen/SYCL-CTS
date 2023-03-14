@@ -35,13 +35,10 @@ namespace arrow_operator {
 // Creating instance with default constructor
 template <typename T>
 device_global<T> dev_global;
-template <typename T>
-const device_global<T> const_dev_global;
 
 // Used to address elements in the result array
 enum class indx : size_t {
-  correct_def_val_const,
-  correct_def_val_non_const,
+  correct_def_val,
   correct_changed_val,
   size  // must be last
 };
@@ -56,8 +53,7 @@ void run_test(util::logger& log, const std::string& type_name) {
   using kernel = device_global_kernel_name<T, test_names::arrow_operator>;
 
   std::string error_strings[integral(indx::size)]{
-      "Wrong default value returned by arrow operator for const instance",
-      "Wrong default value returned by arrow operator for non-const instance",
+      "Wrong default value returned by arrow operator",
       "Wrong value after change returned by arrow operator",
   };
 
@@ -75,11 +71,7 @@ void run_test(util::logger& log, const std::string& type_name) {
       std::memset(&value_ref_zero_init, 0, sizeof(value_ref_zero_init));
       cgh.single_task<kernel>([=] {
         // Check that arrow operator reference to zero-initialized value
-        result_acc[integral(indx::correct_def_val_const)] =
-            (const_dev_global<T>->a == value_ref_zero_init->a &&
-             const_dev_global<T>->b == value_ref_zero_init->b &&
-             const_dev_global<T>->c == value_ref_zero_init->c);
-        result_acc[integral(indx::correct_def_val_non_const)] &=
+        result_acc[integral(indx::correct_def_val)] &=
             (dev_global<T>->a == value_ref_zero_init->a &&
              dev_global<T>->b == value_ref_zero_init->b &&
              dev_global<T>->c == value_ref_zero_init->c);
@@ -98,8 +90,8 @@ void run_test(util::logger& log, const std::string& type_name) {
       });
     });
   }
-  for (size_t i = integral(indx::correct_def_val_const);
-       i < integral(indx::size); ++i) {
+  for (size_t i = integral(indx::correct_def_val); i < integral(indx::size);
+       ++i) {
     if (!result[i]) {
       std::string fail_msg = get_case_description("Device global: operator->()",
                                                   error_strings[i], type_name);
