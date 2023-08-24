@@ -1,6 +1,9 @@
+from . import sycl_reference_math
+from decimal import *
+
 """Represents a function signature."""
 class funsig:
-    def __init__(self, namespace, ret_type, name, arg_types=[], accuracy="", comment="", pntr_indx=[], mutations=[]):
+    def __init__(self, namespace, ret_type, name, arg_types=[], accuracy="", comment="", pntr_indx=[], mutations=[], static_reference=None):
         self.namespace = namespace # Namespace of function.
         self.ret_type = ret_type # Function return type.
         self.name = name # Function name.
@@ -9,6 +12,7 @@ class funsig:
         self.comment = comment # The comment for function maximum relative error.
         self.pntr_indx = pntr_indx # List containing the indexes of the arguments which are pointers.
         self.mutations = mutations # List containing triples: [first type category, second type category, mutation]
+        self.static_reference = static_reference # Function for getting a static reference result for the given function
         # The type categories refer to the return type category or to an argument type category of the function.
         # The type categories are used to pick actual types. The mutation refers to what is allowed to differ between the actual two types.
         # Types have var_type, base_type and dim, see sycl_types.py
@@ -511,7 +515,7 @@ def create_float_signatures():
     f_copysign = funsig("sycl", "genfloat", "copysign", ["genfloat", "genfloat"], "0")
     sig_list.append(f_copysign)
 
-    f_cos = funsig("sycl", "genfloat", "cos", ["genfloat"], "4")
+    f_cos = funsig("sycl", "genfloat", "cos", ["genfloat"], "4", static_reference=lambda xs: [sycl_reference_math.reference_cos(Decimal(x)) for x in xs])
     sig_list.append(f_cos)
 
     f_cosh = funsig("sycl", "genfloat", "cosh", ["genfloat"], "4")
@@ -526,7 +530,7 @@ def create_float_signatures():
     f_erf = funsig("sycl", "genfloat", "erf", ["genfloat"], "16")
     sig_list.append(f_erf)
 
-    f_exp = funsig("sycl", "genfloat", "exp", ["genfloat"], "3")
+    f_exp = funsig("sycl", "genfloat", "exp", ["genfloat"], "3", static_reference=lambda xs: [sycl_reference_math.reference_exp(Decimal(x)) for x in xs])
     sig_list.append(f_exp)
 
     f_exp2 = funsig("sycl", "genfloat", "exp2", ["genfloat"], "3")
@@ -652,7 +656,7 @@ def create_float_signatures():
     f_rsqrt = funsig("sycl", "genfloat", "rsqrt", ["genfloat"], "2")
     sig_list.append(f_rsqrt)
 
-    f_sin = funsig("sycl", "genfloat", "sin", ["genfloat"], "4")
+    f_sin = funsig("sycl", "genfloat", "sin", ["genfloat"], "4", static_reference=lambda xs: [sycl_reference_math.reference_sin(Decimal(x)) for x in xs])
     sig_list.append(f_sin)
 
     f_sincos = funsig("sycl", "genfloat", "sincos", ["genfloat", "genfloat"], "4", "",[2])
@@ -667,13 +671,13 @@ def create_float_signatures():
     f_sqrt = funsig("sycl", "genfloat", "sqrt", ["genfloat"], "3")
     sig_list.append(f_sqrt)
 
-    f_tan = funsig("sycl", "genfloat", "tan", ["genfloat"], "5")
+    f_tan = funsig("sycl", "genfloat", "tan", ["genfloat"], "5", static_reference=lambda xs: [sycl_reference_math.reference_tan(Decimal(x)) for x in xs])
     sig_list.append(f_tan)
 
     f_tanh = funsig("sycl", "genfloat", "tanh", ["genfloat"], "5")
     sig_list.append(f_tanh)
 
-    f_tanpi = funsig("sycl", "genfloat", "tanpi", ["genfloat"], "6")
+    f_tanpi = funsig("sycl", "genfloat", "tanpi", ["genfloat"], "6", static_reference=lambda xs: [sycl_reference_math.reference_tanpi(Decimal(x)) for x in xs])
     sig_list.append(f_tanpi)
 
     f_tgamma = funsig("sycl", "genfloat", "tgamma", ["genfloat"], "16")

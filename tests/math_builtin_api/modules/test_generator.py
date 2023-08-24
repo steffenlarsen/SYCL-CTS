@@ -77,85 +77,99 @@ test_case_templates_check = {
 """)
 }
 
-def generate_value(base_type, dim):
-    val = ""
+def generate_input_values(base_type, dim):
+    vals = []
     for i in range(dim):
         if base_type == "bool":
-            val += "true,"
-        if base_type == "float" or base_type == "double" or base_type == "sycl::half":
+            vals.append("true")
+        elif base_type == "float" or base_type == "double" or base_type == "sycl::half":
             # 10 digits of precision for floats, doubles and half.
-            val += str(round(random.uniform(0.1, 0.9), 10))
-            if base_type == "double":
-                val += ","
-            else:
-                val += "f,"
+            vals.append(str(round(random.uniform(0.1, 0.9), 10)))
         # random 8 bit integer
-        if base_type == "char":
-            val += str(random.randint(0, 127)) + ","
-        if base_type == "signed char" or base_type == "int8_t":
-            val += str(random.randint(-128, 127)) + ","
-        if base_type == "unsigned char" or base_type == "uint8_t":
-            val += str(random.randint(0, 255)) + ","
+        elif base_type == "char":
+            vals.append(str(random.randint(0, 127)))
+        elif base_type == "signed char" or base_type == "int8_t":
+            vals.append(str(random.randint(-128, 127)))
+        elif base_type == "unsigned char" or base_type == "uint8_t":
+            vals.append(str(random.randint(0, 255)))
         # random 16 bit integer
-        if base_type == "int" or base_type == "short" or base_type == "int16_t":
-            val += str(random.randint(-32768, 32767)) + ","
-        if base_type == "unsigned" or base_type == "unsigned short" or base_type == "uint16_t":
-            val += str(random.randint(0, 65535)) + ","
+        elif base_type == "int" or base_type == "short" or base_type == "int16_t":
+            vals.append(str(random.randint(-32768, 32767)))
+        elif base_type == "unsigned" or base_type == "unsigned short" or base_type == "uint16_t":
+            vals.append(str(random.randint(0, 65535)))
         # random 32 bit integer
-        if base_type == "long" or base_type == "int32_t":
-            val += str(random.randint(-2147483648, 2147483647)) + ","
-        if base_type == "unsigned long" or base_type == "uint32_t":
-            val += str(random.randint(0, 4294967295)) + "U" + ","
+        elif base_type == "long" or base_type == "int32_t":
+            vals.append(str(random.randint(-2147483648, 2147483647)))
+        elif base_type == "unsigned long" or base_type == "uint32_t":
+            vals.append(str(random.randint(0, 4294967295)))
         # random 64 bit integer
-        if base_type == "long long" or base_type == "int64_t":
-            val += str(random.randint(-9223372036854775808, 9223372036854775807)) + "LL" + ","
-        if base_type == "unsigned long long" or base_type == "uint64_t":
-            val += str(random.randint(0, 18446744073709551615)) + "LLU" + ","
-    return val[:-1]
+        elif base_type == "long long" or base_type == "int64_t":
+            vals.append(str(random.randint(-9223372036854775808, 9223372036854775807)))
+        elif base_type == "unsigned long long" or base_type == "uint64_t":
+            vals.append(str(random.randint(0, 18446744073709551615)))
+        else:
+            raise Exception("Unexpected argument type: " + base_type)
+    return vals
 
-def generate_multi_ptr(var_name, var_type, memory, decorated):
-    decl = ""
+def generate_all_input_values(sig):
+    return [generate_input_values(arg.base_type, arg.dim) for arg in sig.arg_types]
+
+def generate_value_init(base_type, values):
+    # First find the suffix for the type.
+    suffix = ""
+    if base_type == "float" or base_type == "sycl::half":
+        suffix = "f"
+    elif base_type == "unsigned long" or base_type == "uint32_t":
+        suffix = "U"
+    if base_type == "long long" or base_type == "int64_t":
+        suffix = "LL"
+    if base_type == "unsigned long long" or base_type == "uint64_t":
+        suffix = "LLU"
+
+    # Add the suffix to all values.
+    suffixed_values = [str(value) + suffix for value in values]
+
+    # Join them by , and we have the initializer.
+    return ", ".join(suffixed_values)
+
+def generate_multi_ptr(var_name, var_type, input_values, memory, decorated):
+    source_name = "multiPtrSourceData"
+    decl = var_type.name + " " + source_name + "(" + generate_value_init(var_type.base_type, input_values) + ");\n"
     if memory == "global":
-        source_name = "multiPtrSourceData"
-        decl = var_type.name + " " + source_name + "(" + generate_value(var_type.base_type, var_type.dim) + ");\n"
         decl += "sycl::multi_ptr<" + var_type.name + ", sycl::access::address_space::global_space," + decorated + "> "
         decl += var_name + "(acc);\n"
-    if memory == "local":
-        source_name = "multiPtrSourceData"
-        decl = var_type.name + " " + source_name + "(" + generate_value(var_type.base_type, var_type.dim) + ");\n"
+    elif memory == "local":
         decl += "sycl::multi_ptr<" + var_type.name + ", sycl::access::address_space::local_space," + decorated + "> "
         decl += var_name + "(acc);\n"
-    if memory == "private":
-        source_name = "multiPtrSourceData"
-        decl = var_type.name + " " + source_name + "(" + generate_value(var_type.base_type, var_type.dim) + ");\n"
+    elif memory == "private":
         decl += "sycl::multi_ptr<" + var_type.name + ", sycl::access::address_space::private_space," + decorated + "> "
         decl += var_name + " = sycl::address_space_cast<sycl::access::address_space::private_space," + decorated + ">(&"
         decl += source_name + ");\n"
+    else:
+        raise Exception("Unexpected memory type for multi_ptr: " + memory)
     return decl
 
-def generate_variable(var_name, var_type, var_index):
-    return var_type.name + " " + var_name + "(" + generate_value(var_type.base_type, var_type.dim) + ");\n"
+def generate_variable(var_name, var_type, var_index, input_values):
+    return var_type.name + " " + var_name + "(" + generate_value_init(var_type.base_type, input_values) + ");\n"
 
-def generate_arguments(sig, memory, decorated):
+def generate_arguments(sig, memory, decorated, all_input_values):
     arg_src = ""
     arg_names = []
     arg_index = 0
-    for arg in sig.arg_types:
+    for arg, input_values in zip(sig.arg_types, all_input_values):
         # Create argument name.
         arg_name = "inputData_" + str(arg_index)
         arg_names.append(arg_name)
 
         # Identify whether argument is a pointer.
-        is_pointer = False
         # Value 0 in pntr_indx is reserved for the return type.
-        if (arg_index + 1) in sig.pntr_indx:
-            is_pointer = True
+        is_pointer = (arg_index + 1) in sig.pntr_indx
 
         current_arg = ""
         if is_pointer:
-            current_arg = generate_multi_ptr(arg_name, arg, memory, decorated )
+            current_arg = generate_multi_ptr(arg_name, arg, input_values, memory, decorated)
         else:
-            current_arg = generate_variable(arg_name, arg, arg_index)
+            current_arg = generate_variable(arg_name, arg, arg_index, input_values)
 
         arg_src += current_arg + "        "
         arg_index += 1
@@ -192,16 +206,28 @@ def generate_function_private_call(sig, arg_names, arg_src, types):
         arg_type=sig.arg_types[-1].name)
     return fc
 
+reference_static_reference_init_template = Template("${ret_type}(${static_reference_results_init})")
+reference_func_call_init_template = Template("reference::${func_name}(${arg_names})")
 reference_template = Template("""
         ${arg_src}
-        sycl_cts::resultRef<${ret_type}> ref = reference::${func_name}(${arg_names});
+        sycl_cts::resultRef<${ret_type}> ref = ${init};
 """)
-def generate_reference(sig, arg_names, arg_src):
+def generate_reference(sig, arg_names, arg_src, all_input_values):
+    init = ""
+    if sig.static_reference is not None:
+        static_reference_results = sig.static_reference(*all_input_values)
+        static_reference_results_init = generate_value_init(sig.ret_type, static_reference_results)
+        init = reference_static_reference_init_template.substitute(
+            ret_type=sig.ret_type.name,
+            static_reference_results_init=static_reference_results_init)
+    else:
+        init = reference_func_call_init_template.substitute(
+            func_name=sig.name,
+            arg_names=",".join(arg_names))
     fc = reference_template.substitute(
         arg_src=arg_src,
-        func_name=sig.name,
         ret_type=sig.ret_type.name,
-        arg_names=",".join(arg_names))
+        init=init)
     return fc
 
 reference_ptr_template = Template("""
@@ -221,8 +247,9 @@ def generate_reference_ptr(types, sig, arg_names, arg_src):
 def generate_test_case(test_id, types, sig, memory, check, decorated = ""):
     testCaseSource = test_case_templates_check[memory] if check else test_case_templates[memory]
     testCaseId = str(test_id)
-    (arg_names, arg_src) = generate_arguments(sig, memory, decorated)
-    testCaseSource = testCaseSource.replace("$REFERENCE", generate_reference(sig, arg_names, arg_src))
+    all_input_values = generate_all_input_values(sig)
+    (arg_names, arg_src) = generate_arguments(sig, memory, decorated, all_input_values)
+    testCaseSource = testCaseSource.replace("$REFERENCE", generate_reference(sig, arg_names, arg_src, all_input_values))
     testCaseSource = testCaseSource.replace("$PTR_REF", generate_reference_ptr(types, sig, arg_names, arg_src))
     testCaseSource = testCaseSource.replace("$TEST_ID", testCaseId)
     testCaseSource = testCaseSource.replace("$FUNCTION_PRIVATE_CALL", generate_function_private_call(sig, arg_names, arg_src, types))
@@ -243,9 +270,10 @@ def generate_test_case(test_id, types, sig, memory, check, decorated = ""):
 
     if memory != "private" and memory !="no_ptr":
         # We rely on the fact that all SYCL math builtins have at most one arguments as pointer.
+        arg_index = sig.pntr_indx[0] - 1
         pointerType = sig.arg_types[sig.pntr_indx[0] - 1]
         sourcePtrDataName = "multiPtrSourceData"
-        sourcePtrData =  generate_variable(sourcePtrDataName, pointerType, 0)
+        sourcePtrData =  generate_variable(sourcePtrDataName, pointerType, 0, all_input_values[arg_index])
         testCaseSource = testCaseSource.replace("$DECL", sourcePtrData)
         testCaseSource = testCaseSource.replace("$DATA", sourcePtrDataName)
         accessorType = ""
@@ -389,7 +417,8 @@ def expand_signature(types, signature):
         new_sig = sycl_functions.funsig(signature.namespace, matched_typelists[signature.ret_type][i], 
                                         signature.name, [matched_typelists[signature.arg_types[j]][i] 
                                                          for j in range(len(signature.arg_types))],
-                                        signature.accuracy, signature.comment, signature.pntr_indx[:])
+                                        signature.accuracy, signature.comment, signature.pntr_indx[:],
+                                        signature.mutations[:], signature.static_reference)
         exp_sig.append(new_sig)
 
     return exp_sig
