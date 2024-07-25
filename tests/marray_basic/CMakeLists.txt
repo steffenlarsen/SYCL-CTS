@@ -11,13 +11,6 @@ list(APPEND TEMPLATE_LIST
   "marray_alignment"
   "marray_constructor"
   "marray_members"
-  "marray_operators_arithmetic_assignment"
-  "marray_operators_arithmetic_binary"
-  "marray_operators_bitwise_assignment"
-  "marray_operators_bitwise_binary"
-  "marray_operators_post_unary"
-  "marray_operators_pre_unary"
-  "marray_operators_relational_binary"
 )
 set(TYPE_LIST "")
 get_marray_elem_type(TYPE_LIST)

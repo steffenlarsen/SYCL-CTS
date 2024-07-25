@@ -19,19 +19,19 @@
 *******************************************************************************/
 
 #include "../common/type_coverage.h"
-#include "marray_common.h"
-#include "marray_operators.h"
+#include "../marray_basic/marray_common.h"
+#include "../marray_basic/marray_operators.h"
 
 // clang-format off
 #cmakedefine CTS_TYPE @CTS_TYPE@
 #cmakedefine CTS_TYPE_NAME std::string("@CTS_TYPE_NAME@")
 // clang-format on
 
-namespace marray_operators_arithmetic_assignment_core {
+namespace marray_operators_arithmetic_binary_core {
 
 using namespace marray_operators;
 
-TEST_CASE(CTS_TYPE_NAME + " arithmetic assignment operators core", "[marray]") {
+TEST_CASE(CTS_TYPE_NAME + " arithmetic binary operators core", "[marray]") {
   auto queue = sycl_cts::util::get_cts_object::queue();
   if constexpr (std::is_same_v<std::remove_cv_t<CTS_TYPE>, sycl::half>) {
     if (!queue.get_device().has(sycl::aspect::fp16))
@@ -45,8 +45,7 @@ TEST_CASE(CTS_TYPE_NAME + " arithmetic assignment operators core", "[marray]") {
           "operations.");
   }
 
-  check_marray_arithmetic_assignment_operators_for_type<CTS_TYPE>{}(
-      CTS_TYPE_NAME);
+  check_marray_arithmetic_binary_operators_for_type<CTS_TYPE>{}(CTS_TYPE_NAME);
 }
 
-}  // namespace marray_operators_arithmetic_assignment_core
+}  // namespace marray_operators_arithmetic_binary_core

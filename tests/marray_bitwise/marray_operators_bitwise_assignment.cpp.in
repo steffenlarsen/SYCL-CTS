@@ -19,8 +19,8 @@
 *******************************************************************************/
 
 #include "../common/type_coverage.h"
-#include "marray_common.h"
-#include "marray_operators.h"
+#include "../marray_basic/marray_common.h"
+#include "../marray_basic/marray_operators.h"
 
 // clang-format off
 #cmakedefine CTS_TYPE @CTS_TYPE@
