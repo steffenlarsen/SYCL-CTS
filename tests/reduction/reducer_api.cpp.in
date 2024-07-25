@@ -17,7 +17,6 @@
 //  limitations under the License.
 //
 *******************************************************************************/
-#include "../../util/extensions.h"
 #include "../common/common.h"
 #include "../common/disabled_for_test_case.h"
 // FIXME: re-enable when sycl::reduction is implemented in hipSYCL
@@ -25,19 +24,37 @@
 #include "reducer_api.h"
 #endif
 
-#include <string>
+// clang-format off
+#cmakedefine CTS_TYPE @CTS_TYPE@
+#cmakedefine CTS_TYPE_NAME std::string("@CTS_TYPE_NAME@")
+// clang-format on
+
+#include <functional>
+#include <numeric>
+#include <type_traits>
+#include <vector>
+
+struct kernel_name;
+
 // FIXME: re-enable when reducer is fully implemented in hipSYCL
 DISABLED_FOR_TEST_CASE(hipSYCL)
-("reducer api fp16", "[reducer][fp16]")({
+(CTS_TYPE_NAME + " reducer api core", "[reducer]")({
   sycl::queue queue = sycl_cts::util::get_cts_object::queue();
-  using avaliability = sycl_cts::util::extensions::availability<
-      sycl_cts::util::extensions::tag::fp16>;
-  if (!avaliability::check(queue)) {
-    SKIP("Device does not support half precision floating point operations.");
+  if constexpr (std::is_same_v<std::remove_cv_t<CTS_TYPE>, sycl::half>) {
+    if (!queue.get_device().has(sycl::aspect::fp16))
+      SKIP(
+          "Device does not support half precision floating point "
+          "operations.");
+  } else if (std::is_same_v<std::remove_cv_t<CTS_TYPE>, double>) {
+    if (!queue.get_device().has(sycl::aspect::fp64))
+      SKIP(
+          "Device does not support double precision floating point "
+          "operations.");
   }
 
-  using type = sycl::half;
-  const std::string type_name("sycl::half");
-  check_reducer_subscript<type>{}(queue, type_name);
-  check_reducer_identity<type>{}(queue, type_name);
+  // check subscript operator
+  check_reducer_subscript<CTS_TYPE>{}(queue, CTS_TYPE_NAME);
+
+  // check identity operator
+  check_reducer_identity<CTS_TYPE>{}(queue, CTS_TYPE_NAME);
 });
