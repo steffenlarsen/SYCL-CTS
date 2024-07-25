@@ -7,7 +7,7 @@
 *******************************************************************************/
 #ifndef SYCL_CTS_HOST_ACCESSOR_PROPERTIES_H
 #define SYCL_CTS_HOST_ACCESSOR_PROPERTIES_H
-#include "accessor_common.h"
+#include "../accessor_basic/accessor_common.h"
 
 namespace host_accessor_properties {
 using namespace sycl_cts;

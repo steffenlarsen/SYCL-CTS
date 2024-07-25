@@ -23,7 +23,7 @@
 *******************************************************************************/
 #ifndef SYCL_CTS_LOCAL_ACCESSOR_LINEAR_COMMON_H
 #define SYCL_CTS_LOCAL_ACCESSOR_LINEAR_COMMON_H
-#include "accessor_common.h"
+#include "../accessor_basic/accessor_common.h"
 
 namespace local_accessor_linearization {
 using namespace accessor_tests_common;

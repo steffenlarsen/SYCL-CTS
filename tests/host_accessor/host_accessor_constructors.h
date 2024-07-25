@@ -23,7 +23,7 @@
 #define SYCL_CTS_HOST_ACCESSOR_CONSTRUCTORS_H
 #include "catch2/catch_test_macros.hpp"
 
-#include "accessor_common.h"
+#include "../accessor_basic/accessor_common.h"
 
 namespace host_accessor_constructors {
 using namespace sycl_cts;

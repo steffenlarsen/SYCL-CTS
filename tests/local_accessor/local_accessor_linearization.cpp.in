@@ -16,32 +16,30 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
-//  Provides host_accessor constructors test for generic types
+//  Provides sycl::local_accessor linearization test for generic types
 //
 *******************************************************************************/
-
-#include "../common/common.h"
+#include "../common/disabled_for_test_case.h"
+#include "catch2/catch_test_macros.hpp"
 
 // clang-format off
 #cmakedefine CTS_TYPE @CTS_TYPE@
 #cmakedefine CTS_TYPE_NAME std::string("@CTS_TYPE_NAME@")
 // clang-format on
 
-// FIXME: re-enable when sycl::host_accessor is implemented
+// FIXME: re-enable when sycl::local_accessor is implemented
 #if !SYCL_CTS_COMPILING_WITH_HIPSYCL
-#include "accessor_common.h"
-#include "host_accessor_constructors.h"
 
-using namespace host_accessor_constructors;
+#include "../accessor_basic/accessor_common.h"
+#include "local_accessor_linearization.h"
+
+using namespace local_accessor_linearization;
 #endif
 
-#include "../common/disabled_for_test_case.h"
-#include "catch2/catch_test_macros.hpp"
-
-namespace host_accessor_constructors_core {
+namespace local_accessor_liniarization_core {
 
 DISABLED_FOR_TEMPLATE_LIST_TEST_CASE(hipSYCL)
-("sycl::host_accessor constructors. CTS_TYPE", "[accessor]",
+("sycl::local_accessor linearization. CTS_TYPE", "[accessor]",
  test_combinations)({
   auto queue = sycl_cts::util::get_cts_object::queue();
   if constexpr (std::is_same_v<std::remove_cv_t<CTS_TYPE>, sycl::half>) {
@@ -58,13 +56,13 @@ DISABLED_FOR_TEMPLATE_LIST_TEST_CASE(hipSYCL)
 
 #if SYCL_CTS_ENABLE_FULL_CONFORMANCE
   if constexpr (std::is_same_v<CTS_TYPE, user_struct>)
-    run_host_constructors_test<CTS_TYPE, TestType>{}(CTS_TYPE_NAME);
+    run_local_linearization_for_type<CTS_TYPE, TestType>{}(CTS_TYPE_NAME);
   else
-    for_type_vectors_marray<run_host_constructors_test, CTS_TYPE, TestType>(
-        CTS_TYPE_NAME);
+    for_type_vectors_marray<run_local_linearization_for_type, CTS_TYPE,
+                            TestType>(CTS_TYPE_NAME);
 #else
-  run_host_constructors_test<CTS_TYPE, TestType>{}(CTS_TYPE_NAME);
+  run_local_linearization_for_type<CTS_TYPE, TestType>{}(CTS_TYPE_NAME);
 #endif  // SYCL_CTS_ENABLE_FULL_CONFORMANCE
 });
 
-}  // namespace host_accessor_constructors_core
+}  // namespace local_accessor_liniarization_core

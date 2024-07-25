@@ -16,17 +16,16 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
-//  Provides tests for generic sycl::accessor placeholder zero-length buffer
-//  range offset constructor
+//  Provides tests for generic sycl::accessor placeholder buufer constructor
 //
 *******************************************************************************/
-#ifndef SYCL_CTS_GENERIC_ACCESSOR_PLACEHOLDER_ZERO_LENGTH_BUFFER_RANGE_OFFSET_CONSTRUCTOR_H
-#define SYCL_CTS_GENERIC_ACCESSOR_PLACEHOLDER_ZERO_LENGTH_BUFFER_RANGE_OFFSET_CONSTRUCTOR_H
-#include "accessor_common.h"
+#ifndef SYCL_CTS_GENERIC_ACCESSOR_PLACEHOLDER_BUFFER_CONSTRUCTOR_H
+#define SYCL_CTS_GENERIC_ACCESSOR_PLACEHOLDER_BUFFER_CONSTRUCTOR_H
+#include "../accessor_basic/accessor_common.h"
 
 #include "catch2/catch_test_macros.hpp"
 
-namespace generic_accessor_placeholder_zero_length_buffer_range_offset_constructor {
+namespace generic_accessor_placeholder_buffer_constructor {
 using namespace sycl_cts;
 using namespace accessor_tests_common;
 
@@ -34,31 +33,28 @@ constexpr accessor_type AccType = accessor_type::generic_accessor;
 
 template <typename DataT, int Dimension, sycl::access_mode AccessMode,
           sycl::target Target>
-void test_placeholder_zero_length_buffser_range_offset_constructor(
-    const std::string& type_name, const std::string& access_mode_name,
-    const std::string& target_name) {
-  auto r = util::get_cts_object::range<Dimension>::get(1, 1, 1);
-  auto offset = util::get_cts_object::id<Dimension>::get(0, 0, 0);
-  auto r_zero = util::get_cts_object::range<Dimension>::get(0, 0, 0);
+void test_placeholder_buffer_constructor(const std::string& type_name,
+                                         const std::string& access_mode_name,
+                                         const std::string& target_name) {
+  constexpr int buf_dims = (0 == Dimension) ? 1 : Dimension;
+  auto r = util::get_cts_object::range<buf_dims>::get(1, 1, 1);
 
-  auto section_name = get_section_name<Dimension>(
-      type_name, access_mode_name, target_name,
-      "From zero-length buffer, range and offset placeholder constructor");
+  auto section_name =
+      get_section_name<Dimension>(type_name, access_mode_name, target_name,
+                                  "From buffer placeholder constructor");
 
   SECTION(section_name) {
-    auto get_acc_functor = [r_zero,
-                            offset](sycl::buffer<DataT, Dimension>& data_buf) {
-      return sycl::accessor<DataT, Dimension, AccessMode, Target>(
-          data_buf, r_zero, offset);
+    auto get_acc_functor = [](sycl::buffer<DataT, buf_dims>& data_buf,
+                              sycl::handler& cgh) {
+      return sycl::accessor<DataT, Dimension, AccessMode, Target>(data_buf);
     };
-    check_zero_length_buffer_placeholder_constructor<AccType, DataT, Dimension,
-                                                     AccessMode, Target>(
+    check_common_constructor<AccType, DataT, Dimension, AccessMode, Target>(
         get_acc_functor);
   }
 }
 
 template <typename T, typename AccessT, typename TargetT, typename DimensionT>
-class run_tests_placeholder_zero_length_buffer_range_offset_constructor {
+class run_tests_placeholder_buffer_constructor {
   static constexpr sycl::access_mode AccessMode = AccessT::value;
   static constexpr int Dimension = DimensionT::value;
   static constexpr sycl::target Target = TargetT::value;
@@ -67,18 +63,17 @@ class run_tests_placeholder_zero_length_buffer_range_offset_constructor {
   void operator()(const std::string& type_name,
                   const std::string& access_mode_name,
                   const std::string& target_name) {
-    test_placeholder_zero_length_buffser_range_offset_constructor<
-        T, Dimension, AccessMode, Target>(type_name, access_mode_name,
-                                          target_name);
+    test_placeholder_buffer_constructor<T, Dimension, AccessMode, Target>(
+        type_name, access_mode_name, target_name);
   }
 };
 
 using test_combinations =
-    typename get_combinations<access_modes_pack, dimensions_pack,
+    typename get_combinations<access_modes_pack, all_dimensions_pack,
                               targets_pack>::type;
 
 template <typename T, typename ArgCombination>
-class run_generic_placeholder_zero_length_buffer_range_offset_constructor_test {
+class run_generic_placeholder_buffer_constructor_test {
  public:
   void operator()(const std::string& type_name) {
     // Get the packs from the test combination type.
@@ -98,8 +93,7 @@ class run_generic_placeholder_zero_length_buffer_range_offset_constructor_test {
     // to string with container<T> if T is an array or other kind of container.
     auto actual_type_name = type_name_string<T>::get(type_name);
 
-    for_all_combinations<
-        run_tests_placeholder_zero_length_buffer_range_offset_constructor, T>(
+    for_all_combinations<run_tests_placeholder_buffer_constructor, T>(
         access_modes, targets, dimensions, type_name);
 
     // For covering const types
@@ -108,11 +102,9 @@ class run_generic_placeholder_zero_length_buffer_range_offset_constructor_test {
     const auto read_only_acc_mode =
         value_pack<sycl::access_mode, sycl::access_mode::read>::generate_named(
             "access_mode::read");
-    for_all_combinations<
-        run_tests_placeholder_zero_length_buffer_range_offset_constructor,
-        const T>(read_only_acc_mode, targets, dimensions, actual_type_name);
+    for_all_combinations<run_tests_placeholder_buffer_constructor, const T>(
+        read_only_acc_mode, targets, dimensions, actual_type_name);
   }
 };
-}  // namespace
-   // generic_accessor_placeholder_zero_length_buffer_range_offset_constructor
-#endif  // SYCL_CTS_GENERIC_ACCESSOR_PLACEHOLDER_ZERO_LENGTH_BUFFER_RANGE_OFFSET_CONSTRUCTOR_H
+}  // namespace generic_accessor_placeholder_buffer_constructor
+#endif  // SYCL_CTS_GENERIC_ACCESSOR_PLACEHOLDER_BUFFER_CONSTRUCTOR_H

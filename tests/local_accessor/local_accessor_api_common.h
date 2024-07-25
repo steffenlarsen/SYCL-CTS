@@ -22,7 +22,7 @@
 
 #ifndef SYCL_CTS_LOCAL_ACCESSOR_API_COMMON_H
 #define SYCL_CTS_LOCAL_ACCESSOR_API_COMMON_H
-#include "accessor_common.h"
+#include "../accessor_basic/accessor_common.h"
 
 namespace local_accessor_api_common {
 using namespace sycl_cts;

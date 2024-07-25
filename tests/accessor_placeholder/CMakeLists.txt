@@ -8,30 +8,12 @@ function(configure_test_case)
 endfunction()
 
 list(APPEND TEMPLATE_LIST
-  "accessor_default_values"
-  "accessor_exceptions"
-  "accessor_implicit_conversions"
-  "generic_accessor_api"
-  "generic_accessor_common_buffer_constructors"
-  "generic_accessor_common_buffer_tag_constructors"
-  "generic_accessor_def_constructor"
-  "generic_accessor_linearization"
   "generic_accessor_placeholder_buffer_constructor"
   "generic_accessor_placeholder_buffer_range_constructor"
   "generic_accessor_placeholder_buffer_range_offset_constructor"
   "generic_accessor_placeholder_zero_length_buffer_constructor"
   "generic_accessor_placeholder_zero_length_buffer_range_constructor"
   "generic_accessor_placeholder_zero_length_buffer_range_offset_constructor"
-  "generic_accessor_properties"
-  "generic_accessor_zero_dim_constructor"
-  "host_accessor_api"
-  "host_accessor_constructors"
-  "host_accessor_linearization"
-  "host_accessor_properties"
-  "local_accessor_access_among_work_items"
-  "local_accessor_api"
-  "local_accessor_constructors"
-  "local_accessor_linearization"
 )
 set(TYPE_LIST "")
 get_std_type(TYPE_LIST)

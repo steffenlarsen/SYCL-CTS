@@ -7,7 +7,7 @@
 *******************************************************************************/
 #ifndef SYCL_CTS_HOST_ACCESSOR_API_COMMON_H
 #define SYCL_CTS_HOST_ACCESSOR_API_COMMON_H
-#include "accessor_common.h"
+#include "../accessor_basic/accessor_common.h"
 #include <cmath>
 
 namespace host_accessor_api_common {
