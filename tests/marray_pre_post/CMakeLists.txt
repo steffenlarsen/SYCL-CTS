@@ -8,8 +8,8 @@ function(configure_test_case)
 endfunction()
 
 list(APPEND TEMPLATE_LIST
-  "marray_operators_arithmetic_assignment"
-  "marray_operators_arithmetic_binary"
+  "marray_operators_post_unary"
+  "marray_operators_pre_unary"
 )
 set(TYPE_LIST "")
 get_marray_elem_type(TYPE_LIST)
