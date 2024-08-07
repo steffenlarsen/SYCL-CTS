@@ -21,7 +21,7 @@
 *******************************************************************************/
 #ifndef SYCL_CTS_GENERIC_ACCESSOR_DEF_CONSTRUCTOR_H
 #define SYCL_CTS_GENERIC_ACCESSOR_DEF_CONSTRUCTOR_H
-#include "accessor_common.h"
+#include "../accessor_basic/accessor_common.h"
 
 #include "catch2/catch_test_macros.hpp"
 

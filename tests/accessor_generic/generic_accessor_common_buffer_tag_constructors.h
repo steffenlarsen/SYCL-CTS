@@ -21,7 +21,7 @@
 *******************************************************************************/
 #ifndef SYCL_CTS_GENERIC_ACCESSOR_COMMON_BUFFER_TAG_CONSTRUCTORS_H
 #define SYCL_CTS_GENERIC_ACCESSOR_COMMON_BUFFER_TAG_CONSTRUCTORS_H
-#include "accessor_common.h"
+#include "../accessor_basic/accessor_common.h"
 
 #include "catch2/catch_test_macros.hpp"
 

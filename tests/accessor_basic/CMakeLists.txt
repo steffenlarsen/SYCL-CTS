@@ -11,13 +11,6 @@ list(APPEND TEMPLATE_LIST
   "accessor_default_values"
   "accessor_exceptions"
   "accessor_implicit_conversions"
-  "generic_accessor_api"
-  "generic_accessor_common_buffer_constructors"
-  "generic_accessor_common_buffer_tag_constructors"
-  "generic_accessor_def_constructor"
-  "generic_accessor_linearization"
-  "generic_accessor_properties"
-  "generic_accessor_zero_dim_constructor"
 )
 set(TYPE_LIST "")
 get_std_type(TYPE_LIST)
