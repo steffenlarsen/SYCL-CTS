@@ -23,7 +23,7 @@
 
 #ifndef SYCL_CTS_LOCAL_ACCESSOR_ACCESS_AMONG_WORK_ITEMS_H
 #define SYCL_CTS_LOCAL_ACCESSOR_ACCESS_AMONG_WORK_ITEMS_H
-#include "accessor_common.h"
+#include "../accessor_basic/accessor_common.h"
 
 namespace local_accessor_access_among_work_items {
 using namespace sycl_cts;
