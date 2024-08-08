@@ -15,7 +15,7 @@
 
 // FIXME: re-enable when sycl::host_accessor is implemented
 #if !SYCL_CTS_COMPILING_WITH_HIPSYCL
-#include "accessor_common.h"
+#include "../accessor_basic/accessor_common.h"
 #include "host_accessor_properties.h"
 
 using namespace host_accessor_properties;
