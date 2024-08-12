@@ -25,7 +25,7 @@ using namespace generic_accessor_api_common;
 namespace generic_accessor_api_core {
 
 DISABLED_FOR_TEMPLATE_LIST_TEST_CASE(hipSYCL)
-("Generic sycl::accessor api. CTS_TYPE", "[accessor]", test_combinations)({
+(CTS_TYPE_NAME + " Generic sycl::accessor api.", "[accessor]", test_combinations)({
   using namespace generic_accessor_api_common;
   auto queue = sycl_cts::util::get_cts_object::queue();
   if constexpr (std::is_same_v<std::remove_cv_t<CTS_TYPE>, sycl::half>) {

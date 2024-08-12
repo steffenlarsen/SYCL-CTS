@@ -31,7 +31,7 @@ namespace accessor_default_values_test_core {
 using namespace sycl_cts;
 
 DISABLED_FOR_TEMPLATE_LIST_TEST_CASE(hipSYCL)
-("Accessors constructor default values test CTS_TYPE", "[accessor]",
+(CTS_TYPE_NAME + " Accessors constructor default values test", "[accessor]",
  test_combinations)({
   auto queue = sycl_cts::util::get_cts_object::queue();
   if constexpr (std::is_same_v<std::remove_cv_t<CTS_TYPE>, sycl::half>) {

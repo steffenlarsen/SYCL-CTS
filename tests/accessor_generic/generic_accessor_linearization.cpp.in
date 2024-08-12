@@ -42,7 +42,7 @@ using namespace generic_accessor_linearization;
 namespace generic_accessor_linearization_core {
 
 DISABLED_FOR_TEMPLATE_LIST_TEST_CASE(hipSYCL)
-("Generic sycl::accessor linearization test. CTS_TYPE", "[accessor]",
+(CTS_TYPE_NAME + " Generic sycl::accessor linearization test.", "[accessor]",
  test_combinations)({
   auto queue = sycl_cts::util::get_cts_object::queue();
   if constexpr (std::is_same_v<std::remove_cv_t<CTS_TYPE>, sycl::half>) {
