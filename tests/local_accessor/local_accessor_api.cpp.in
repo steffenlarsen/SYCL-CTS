@@ -24,7 +24,8 @@ using namespace local_accessor_api_common;
 namespace local_accessor_api_core {
 
 DISABLED_FOR_TEMPLATE_LIST_TEST_CASE(hipSYCL)
-("sycl::local_accessor api. core types", "[accessor]", test_combinations)({
+(CTS_TYPE_NAME + " sycl::local_accessor api. core types", "[accessor]",
+ test_combinations)({
   auto queue = sycl_cts::util::get_cts_object::queue();
   if constexpr (std::is_same_v<std::remove_cv_t<CTS_TYPE>, sycl::half>) {
     if (!queue.get_device().has(sycl::aspect::fp16))
