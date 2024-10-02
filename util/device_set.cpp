@@ -78,7 +78,7 @@ void device_set::removeDevsWithout(sycl::aspect aspect) {
 void device_set::removeDevsWithout(const kernel_restrictions& restriction) {
   auto condition = [&](const StorageType::iterator& it) {
     const auto& device = *it;
-    return !restriction.is_compatible(device);
+    return !restriction.is_expected_to_compile(device, m_context);
   };
   util::erase_if(m_devices, condition);
 }

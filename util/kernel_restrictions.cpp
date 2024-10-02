@@ -37,6 +37,11 @@ void kernel_restrictions::add_aspects(const aspect::aspect_set& asp) {
   m_aspects.insert(asp.begin(), asp.end());
 }
 
+void kernel_restrictions::add_additional_check(
+    const std::function<bool(sycl::device, sycl::context)>& check) {
+  additional_checks.push_back(check);
+}
+
 bool kernel_restrictions::is_compatible(const sycl::device& device,
                                         std::string& info) const {
   bool compatible = true;
@@ -98,6 +103,18 @@ bool kernel_restrictions::is_compatible(const sycl::device& device,
 bool kernel_restrictions::is_compatible(const sycl::device& device) const {
   std::string dummy_string;
   return is_compatible(device, dummy_string);
+}
+
+bool kernel_restrictions::is_expected_to_compile(
+    const sycl::device& device, const sycl::context& ctx) const {
+  // Some checks may not have to do with compatibility, but may be required for
+  // the kernels to compile.
+  bool check_results = true;
+  for (auto &check : additional_checks)
+    check_results &= check(device, ctx);
+
+  std::string dummy_string;
+  return check_results && is_compatible(device, dummy_string);
 }
 
 aspect::aspect_set kernel_restrictions::get_aspects() const {

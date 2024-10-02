@@ -37,6 +37,10 @@ struct kernel_base {
   }
 };
 
+struct kernel_unannotated : kernel_base {
+  void operator()(sycl::item<1> id) const { trigger_invocation_flag(id); }
+};
+
 struct kernel_cpu : kernel_base {
   [[sycl::device_has(sycl::aspect::cpu)]] void operator()(
       sycl::item<1> id) const {
@@ -471,6 +475,29 @@ struct kernel_likely_unsupported_work_group_size_descriptor {
   }
 };
 
+// Builds a kernel_bundle with kernel_unannotated to ensure 
+inline uint32_t common_get_max_sub_group(sycl::device dev, sycl::context ctx) {
+  if (false) {
+    // This will never run, but is used to instantiate the kernel_unannotated
+    // kernel.
+    sycl::queue q{ctx, dev};
+
+    sycl::buffer<kernel_base::element_type, 1> dummy_buff{sycl::range<1>{1}};
+    q.submit([&](sycl::handler &cgh) {
+      kernel_base::accessor_t dummy_acc{dummy_buff, cgh};
+      cgh.parallel_for(sycl::range<1>{1}, kernel_unannotated{dummy_acc});
+    });
+  }
+
+  sycl::kernel_id kernel_unannotated_id =
+      sycl::get_kernel_id<kernel_unannotated>();
+  auto exec_bundle = sycl::get_kernel_bundle<sycl::bundle_state::executable>(
+      ctx, {dev}, {kernel_unannotated_id});
+  sycl::kernel kern = exec_bundle.get_kernel(kernel_unannotated_id);
+  return kern.get_info<sycl::info::kernel_device_specific::max_sub_group_size>(
+      dev);
+}
+
 struct kernel_likely_unsupported_sub_group_size : kernel_base {
   [[sycl::reqd_sub_group_size(3)]] void operator()(sycl::item<1> id) const {
     trigger_invocation_flag(id);
@@ -482,6 +509,9 @@ struct kernel_likely_unsupported_sub_group_size_descriptor {
   static auto get_restrictions() {
     auto restrictions = util::kernel_restrictions();
     restrictions.set_sub_group_size(3);
+    restrictions.add_additional_check([](sycl::device dev, sycl::context ctx) {
+      return common_get_max_sub_group(dev, ctx) >= 3;
+    });
     return restrictions;
   }
 };
@@ -497,6 +527,9 @@ struct kernel_likely_supported_sub_group_size_descriptor {
   static auto get_restrictions() {
     auto restrictions = util::kernel_restrictions();
     restrictions.set_sub_group_size(32);
+    restrictions.add_additional_check([](sycl::device dev, sycl::context ctx) {
+      return common_get_max_sub_group(dev, ctx) >= 32;
+    });
     return restrictions;
   }
 };
@@ -531,6 +564,9 @@ struct kernel_sub_group_size_descriptor {
   static auto get_restrictions() {
     auto restrictions = util::kernel_restrictions();
     restrictions.set_sub_group_size(SIZE);
+    restrictions.add_additional_check([](sycl::device dev, sycl::context ctx) {
+      return common_get_max_sub_group(dev, ctx) >= SIZE;
+    });
     return restrictions;
   }
 };

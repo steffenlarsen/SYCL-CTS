@@ -96,11 +96,12 @@ template <typename KernelDescriptorT, sycl::bundle_state BundleState>
 bool define_kernel(sycl::queue &queue,
                    submit_kernel also_submit = submit_kernel::no) {
   auto restrictions{get_restrictions<KernelDescriptorT, BundleState>()};
-  const bool dev_is_compat = restrictions.is_compatible(queue.get_device());
+  const bool expected_to_compile = restrictions.is_expected_to_compile(
+      queue.get_device(), queue.get_context());
   // We use sycl::queue::submit only for compatible pair of kernel and device
   // but even for a case when device is not compatible we are sure that we can
   // call sycl::get_kernel_id
-  if (also_submit == submit_kernel::yes && dev_is_compat) {
+  if (also_submit == submit_kernel::yes && expected_to_compile) {
     using kernel_functor = typename KernelDescriptorT::type;
     using res_type = typename kernel_functor::element_type;
     res_type result = kernel_functor::init_val;
@@ -132,13 +133,13 @@ struct execute_kernel_and_verify_executions {
                   const std::string &kernel_name) {
     const auto kernel_restrictions{
         get_restrictions<KernelDescriptorT, sycl::bundle_state::executable>()};
-    const bool dev_compat_status{
-        kernel_restrictions.is_compatible(queue.get_device())};
+    const bool expected_to_compile{kernel_restrictions.is_expected_to_compile(
+        queue.get_device(), queue.get_context())};
     const bool kernel_was_invoked{
         define_kernel<KernelDescriptorT, sycl::bundle_state::executable>(
             queue, submit_kernel::yes)};
 
-    if (dev_compat_status && !kernel_was_invoked) {
+    if (expected_to_compile && !kernel_was_invoked) {
       FAIL(log, kernel_name + "kernel was not invoked");
     }
   }
@@ -192,13 +193,14 @@ struct verify_that_kernel_in_bundle {
       auto k_id{sycl::get_kernel_id<kernel>()};
 
       const bool kb_has_kernel{kernel_bundle.has_kernel(k_id)};
-      const bool dev_compat_status{
+      const bool expected_to_compile{
           std::all_of(dev_vector.begin(), dev_vector.end(),
-                      [&](const sycl::device &device) {
-                        return kernel_restrictions.is_compatible(device);
+                      [&](const sycl::device& device) {
+                        return kernel_restrictions.is_expected_to_compile(
+                            device, kernel_bundle.get_context());
                       })};
 
-      compare_dev_compat_and_has_kb_result(log, dev_compat_status,
+      compare_dev_compat_and_has_kb_result(log, expected_to_compile,
                                            kb_has_kernel, kernel_name);
     }
   }

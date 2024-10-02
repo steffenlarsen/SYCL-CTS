@@ -58,7 +58,7 @@ class TEST_NAME : public sycl_cts::util::test_base {
     // fill vector with kernel ids with for pre-defined kernels
     for_all_types<fill_vector_with_user_defined_kernel_ids>(
         kernels_without_attributes, user_defined_kernel_ids,
-        queue.get_device());
+        queue.get_device(), queue.get_context());
 
     run_test_for_all_overload_types<sycl::bundle_state::executable>(
         log, queue, kernels_without_attributes, user_defined_kernel_ids);

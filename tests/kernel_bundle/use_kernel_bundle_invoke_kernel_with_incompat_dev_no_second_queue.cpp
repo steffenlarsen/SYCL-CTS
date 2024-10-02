@@ -44,7 +44,7 @@ struct run_verification {
     std::vector<sycl::device> incompatible_devs;
 
     for (auto& dev : ctx.get_devices()) {
-      if (restrictions.is_compatible(dev))
+      if (restrictions.is_expected_to_compile(dev, ctx))
         there_is_compat_dev = true;
       else
         incompatible_devs.push_back(dev);

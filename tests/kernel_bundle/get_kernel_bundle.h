@@ -60,14 +60,15 @@ class TestCaseDescription
  */
 template <typename KernelDescriptorT>
 struct fill_vector_with_user_defined_kernel_ids {
-  void operator()(std::vector<sycl::kernel_id> &user_defined_kernel_ids,
-                  const sycl::device &device, const std::string &kernel_name) {
+  void operator()(std::vector<sycl::kernel_id>& user_defined_kernel_ids,
+                  const sycl::device& device, const sycl::context& context,
+                  const std::string& kernel_name) {
     using kernel = typename KernelDescriptorT::type;
     const auto kernel_restrictions{
         kernel_bundle::get_restrictions<KernelDescriptorT,
                                         sycl::bundle_state::executable>()};
 
-    if (kernel_restrictions.is_compatible(device)) {
+    if (kernel_restrictions.is_expected_to_compile(device, context)) {
       auto k_id{sycl::get_kernel_id<kernel>()};
       user_defined_kernel_ids.push_back(k_id);
     }
@@ -107,7 +108,8 @@ struct run_tests_for_overloads_that_obtain_kernel_name {
               context)};
 
       const bool kb_has_kernel{kernel_bundle.has_kernel(k_id)};
-      const bool dev_compat_status{kernel_restrictions.is_compatible(device)};
+      const bool dev_compat_status{
+          kernel_restrictions.is_expected_to_compile(device, context)};
       kernel_bundle::compare_dev_compat_and_has_kb_result(
           log, dev_compat_status, kb_has_kernel, kernel_name);
     }
@@ -120,7 +122,8 @@ struct run_tests_for_overloads_that_obtain_kernel_name {
               context, {device})};
 
       const bool kb_has_kernel{kernel_bundle.has_kernel(k_id)};
-      const bool dev_compat_status{kernel_restrictions.is_compatible(device)};
+      const bool dev_compat_status{
+          kernel_restrictions.is_expected_to_compile(device, context)};
 
       kernel_bundle::compare_dev_compat_and_has_kb_result(
           log, dev_compat_status, kb_has_kernel, kernel_name);

@@ -30,6 +30,9 @@ class kernel_restrictions {
   size_t work_group_size[3];
   int work_group_size_dims;
 
+  std::vector<std::function<bool(sycl::device, sycl::context)>>
+      additional_checks;
+
  public:
   kernel_restrictions();
 
@@ -48,10 +51,16 @@ class kernel_restrictions {
 
   void add_aspects(const aspect::aspect_set& asp);
 
+  void add_additional_check(
+      const std::function<bool(sycl::device, sycl::context)>& check);
+
   void reset();
 
   bool is_compatible(const sycl::device& device, std::string& info) const;
   bool is_compatible(const sycl::device& device) const;
+
+  bool is_expected_to_compile(const sycl::device& device,
+                              const sycl::context& ctx) const;
 
   aspect::aspect_set get_aspects() const;
   bool has_sub_group_size() const;
